@@ -49,13 +49,19 @@ def cre_courses():
     else:
         db.session.commit()
 def get_courses():
-    result = db.session.query(Course._id, Course.name, func.count(Course_assignment.eid).label('enrollment_count')) \
+    result = db.session.query(Course, func.count(Course_assignment.eid).label('enrollment_count')) \
     .join(Course_assignment) \
     .group_by(Course._id) \
     .all()
     r = {}
     for row in result:
-        r[row._id]= {'name': row.name,
+        r[row.Course._id]= {'name': row.Course.name,
+           'duration': row.Course.duration,
+           'knowledge_point': row.Course.knowledge_point,
+           'department': row.Course.dept.name,
+           'unit': row.Course.unit.name,
+           'product': row.Course.prod.name,
+           'description': row.Course.desc,
            'enrollment_count': row.enrollment_count,
            }
     return r
@@ -88,9 +94,19 @@ def upd_courses():
     else:
         db.session.commit()
 
-def get_info():
-    table = request.args.get('table')
-    result = db.session.query(get_class(table)).all()
-    return result
+# def get_info():
+#     table = request.args.get('table')
+#     result = db.session.query(get_class(table)).all()
+#     r = {}
+#     for row in result:
+#         r[row._id]= {'name': row.name,
+#            'duration': row.duration,
+#            'knowledge_point': row.knowledge_point,
+#            'department': row.dept.name,
+#            'unit': row.unit.name,
+#            'product': row.prod.name,
+#            'description': row.desc
+#            }
+#     return r
 
    
