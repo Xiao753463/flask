@@ -79,17 +79,30 @@ def del_courses():
         raise
     else:
         db.session.commit()
-def upd_courses():
-    numbers = request.args.getlist('nums[]')
-    sql = delete(Course).where(Course.number.in_(numbers) )
-    db.session.execute(sql)
+def upd_course():
+    id = request.args.get('id')
+    name = request.args.get('name')
+    duration = request.args.get('duration')
+    did = request.args.get('did')
+    pid = request.args.get('pid')
+    uid = request.args.get('uid')
+    knowledge_point = request.args.get('knowledge_point')
+    desc = request.args.get('desc')
+    course = Course.query.get(id)
+    course.name = name
+    course.duration = duration
+    course.did = did
+    course.pid = pid
+    course.uid = uid
+    course.knowledge_point = knowledge_point
+    course.desc = desc
     try:
         db.session.commit()
-        return ('Course deleted successfully!')
+        return ('Course updated successfully!')
     # do something with the session
     except:                   # * see comment below
         db.session.rollback()
-        return ('Course deleted error!')
+        return ('Course updated error!')
         raise
     else:
         db.session.commit()
