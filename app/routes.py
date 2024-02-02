@@ -23,7 +23,3 @@ def create_course():
 @app.route('/course', methods=['DELETE'])
 def del_course():
     return del_courses()
-# @app.route('/test', methods=['GET'])
-# def test():
-#     courses = get_courses()
-#     return jsonify(courses)  

@@ -68,7 +68,7 @@ class Employee(db.Model):
     mobilephone:str = db.Column('mobilephone', db.String(10))
     email:str = db.Column('email', db.String(30))
     account_enabled:str = db.Column('account_enabled', db.String(10))
-    emp_ca = db.relationship("Course_assignment", backref="emp", cascade="all, delete", passive_deletes=True,)
+    emp_ca = db.relationship("Course_assignment", backref="emp", cascade="all, delete", passive_deletes=True)
 
     def __init__(self, code, name):
         self.code = code
@@ -80,7 +80,6 @@ class Course_assignment(db.Model):
     _id:int = db.Column('assignment_id', db.Integer, primary_key=True)
     eid:int = db.Column('emp_id', db.Integer, db.ForeignKey('employee_static_info.emp_id', ondelete="CASCADE"))
     cid:int = db.Column('course_id', db.Integer, db.ForeignKey('course.course_id', ondelete="CASCADE"))
-
     def __init__(self, eid, cid):
         self.eid = eid
         self.cid = cid
