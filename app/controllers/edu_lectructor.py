@@ -9,7 +9,7 @@ def get_lecturers():
          .filter(Role_Permission.role_name == "講師").all()
     r = {}
     for row in result:
-        r[row.emp_id] = row.emp.name
+        r[row.emp_code] = row.emp.name
     return r
 def get_lecturer_assignments():
     result = db.session.query(Lecturer_Assignment).all()
@@ -25,7 +25,7 @@ def get_lecturer_assignments():
             'end_time': row.course.course_end_time.strftime("%H:%M:%S")
             }
         lecturer_info = {
-            'id': row.emp._id,
+            'code': row.emp.code,
             'name': row.emp.name,
             'rating':row.lecturer_rating
         }

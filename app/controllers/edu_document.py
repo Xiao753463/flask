@@ -5,7 +5,7 @@ from app.models import Course_Document
 import os
 from werkzeug.utils import secure_filename
 
-ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['pdf', 'doc', 'png', 'jpg', 'jpeg', 'gif'])
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -21,6 +21,7 @@ def upl_file():
     desc = request.args.get('desc')
     file = request.files['file']
     course_folder = os.path.join(app.root_path, 'static', cid)
+    name = ''
     if not os.path.exists(course_folder):
         os.makedirs(course_folder)
     if file and allowed_file(file.filename):
@@ -39,7 +40,7 @@ def upl_file():
         return ('File uploaded error!')
     doc = Course_Document(
         cid = cid,
-        name = name,
+        name = 'name',
         time = time,
         editor = editor,
         desc = desc

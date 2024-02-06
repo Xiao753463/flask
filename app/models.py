@@ -70,7 +70,7 @@ class Item_3(db.Model):
 @dataclass
 class Course(db.Model):
     __tablename__ = 'course'
-    _id:int = db.Column('course_id', db.String(10), primary_key=True)
+    _id:str = db.Column('course_id', db.String(10), primary_key=True)
     item_1_id:int = db.Column('item_1_id', db.Integer, db.ForeignKey('item_1.item_1_id', ondelete="CASCADE"))
     name:str = db.Column('course_name', db.String(30))
     duration:int = db.Column('course_duration', db.Integer)
@@ -85,8 +85,9 @@ class Course(db.Model):
     course_end_time:str = db.Column(db.Time)
     course_ca = db.relationship("Course_Assignment", backref="course", cascade="all, delete", passive_deletes=True,)
     course_la = db.relationship("Lecturer_Assignment", backref="course", cascade="all, delete", passive_deletes=True,)
+    course_doc = db.relationship("Course_Document", backref="course", cascade="all, delete", passive_deletes=True,)
     
-    def __init__(self, _id, item_1_id, name, duration, did, pid, uid,  desc, engaged_emp_num=None, 
+    def __init__(self, _id, item_1_id, name, duration, did, uid,  desc, engaged_emp_num=None, 
                  course_start_date=None, course_end_date=None, 
                  course_start_time=None, course_end_time=None):
         self._id = _id
@@ -94,7 +95,6 @@ class Course(db.Model):
         self.name = name
         self.duration = duration
         self.did = did
-        self.pid = pid
         self.uid = uid
         self.desc = desc
         self.engaged_emp_num = engaged_emp_num
@@ -110,7 +110,7 @@ class Course_Document(db.Model):
     cid:str = db.Column('course_id', db.String(10), db.ForeignKey('course.course_id', ondelete="CASCADE"))
     name:str = db.Column('course_document_name', db.String(30))
     time:str = db.Column('update_time', db.Date)
-    editor:int = db.Column('editor', db.Integer, db.ForeignKey('employee_static_info.emp_id', ondelete="CASCADE"))
+    editor:str = db.Column('editor', db.String(10), db.ForeignKey('employee_static_info.emp_code', ondelete="CASCADE"))
     desc:str = db.Column('document_description', db.String(900))
 
     def __init__(self, cid, name, time, editor, desc):
@@ -123,7 +123,7 @@ class Course_Document(db.Model):
 class Employee(db.Model):
     __tablename__ = 'employee_static_info'
     _id:int = db.Column('emp_id', db.Integer, primary_key=True)
-    code:str = db.Column('emp_code', db.String(10))
+    code:str = db.Column('emp_code', db.String(10), unique=True)
     name:str = db.Column('emp_name', db.String(30))
     dept:int = db.Column('department_id', db.Integer, db.ForeignKey('department.department_id', ondelete="CASCADE"))
     pos:str = db.Column('position', db.String(30))
@@ -165,13 +165,13 @@ class User_Role(db.Model):
     __tablename__ = 'user_role'
     _id:int = db.Column('relation_id', db.Integer, primary_key=True)
     role_id:int = db.Column(db.Integer, db.ForeignKey('role_permission.role_permission_id'))
-    emp_id:int = db.Column(db.Integer, db.ForeignKey('employee_static_info.emp_id'))
+    emp_code:str = db.Column(db.String(10), db.ForeignKey('employee_static_info.emp_code', ondelete="CASCADE"))
     emp_role_start:str = db.Column(db.Date, nullable=True)
     emp_role_end:str = db.Column(db.Date, nullable=True)
 
-    def __init__(self, role_id, emp_id, emp_role_start = None, emp_role_end = None):
+    def __init__(self, role_id, emp_code, emp_role_start = None, emp_role_end = None):
         self.role_id = role_id
-        self.emp_id = emp_id
+        self.emp_code = emp_code
         self.emp_role_start = emp_role_start
         self.emp_role_end = emp_role_end
 
@@ -179,22 +179,22 @@ class User_Role(db.Model):
 class Lecturer_Assignment(db.Model):
     __tablename__ = 'lecturer_assignment'
     _id:int = db.Column('lecturer_assignment_id', db.Integer, primary_key=True)
-    emp_id:int = db.Column(db.Integer, db.ForeignKey('employee_static_info.emp_id', ondelete="CASCADE"))
+    emp_code:str = db.Column(db.String(10), db.ForeignKey('employee_static_info.emp_code', ondelete="CASCADE"))
     course_id:str = db.Column(db.String(10), db.ForeignKey('course.course_id', ondelete="CASCADE"))
     lecturer_rating:int = db.Column(db.Integer, nullable=True)
     
-    def __init__(self, emp_id, course_id, rating=None):
-        self.emp_id = emp_id
+    def __init__(self, emp_code, course_id, rating=None):
+        self.emp_code = emp_code
         self.course_id = course_id
         self.rating = rating
 @dataclass  
 class Course_Assignment(db.Model):
     __tablename__ = 'course_assignment'
     _id:int = db.Column('assignment_id', db.Integer, primary_key=True)
-    eid:int = db.Column('emp_id', db.Integer, db.ForeignKey('employee_static_info.emp_id', ondelete="CASCADE"))
+    emp_code:str = db.Column(db.String(10), db.ForeignKey('employee_static_info.emp_code', ondelete="CASCADE"))
     cid:str = db.Column('course_id', db.String(10), db.ForeignKey('course.course_id', ondelete="CASCADE"))
-    def __init__(self, eid, cid):
-        self.eid = eid
+    def __init__(self, emp_code, cid):
+        self.emp_code = emp_code
         self.cid = cid
 # 新增產品
 app.app_context().push()
@@ -226,18 +226,18 @@ d2 = Department("部門B")
 d3 = Department("部門C")
 d4 = Department("部門D")
 d5 = Department("部門E")
-c1 = Course('C001', 1, "課程A", 2, 3, None, 3, "desc", 30, "2024-02-04", "2024-03-30", "09:00:00","12:00:00")
-c2 = Course('C002', 2, "課程B", 4, 2, None, 1, "desc", 30, "2024-02-04", "2024-03-30", "09:00:00","12:00:00")
-c3 = Course('C003', 2, "課程C", 3, 1, None, 1, "desc", 30, "2024-02-04", "2024-03-30", "09:00:00","12:00:00")
-ca1 = Course_Assignment(1,'C001')
-ca2 = Course_Assignment(1,'C002')
-ca3 = Course_Assignment(2,'C002')
-ca4 = Course_Assignment(3,'C002')
-la1 = Lecturer_Assignment(1,'C002')
-la2 = Lecturer_Assignment(1,'C001')
-la3 = Lecturer_Assignment(2,'C003')
+c1 = Course('C001', 1, "課程A", 2, 3, 3, "desc", 30, "2024-02-04", "2024-03-30", "09:00:00","12:00:00")
+c2 = Course('C002', 2, "課程B", 4, 2, 1, "desc", 30, "2024-02-04", "2024-03-30", "09:00:00","12:00:00")
+c3 = Course('C003', 2, "課程C", 3, 1, 1, "desc", 30, "2024-02-04", "2024-03-30", "09:00:00","12:00:00")
+ca1 = Course_Assignment('E001','C001')
+ca2 = Course_Assignment('E001','C002')
+ca3 = Course_Assignment('E002','C002')
+ca4 = Course_Assignment('E003','C002')
+la1 = Lecturer_Assignment('E001','C002')
+la2 = Lecturer_Assignment('E001','C001')
+la3 = Lecturer_Assignment('E002','C003')
 rp = Role_Permission('講師', '講師描述', '課程管理模組', 'r')
-ur = User_Role(1,1)
+ur = User_Role(1,'E001')
 db.session.add_all([i1_1,i1_2,i2_1,i2_2,i2_3,i3_1,i3_2,i3_3,p1,p2,p3,prod1,prod2,prod3,prod4,prod5,u1,u2,u3,u4,u5,d1,d2,d3,d4,d5,c1,c2,c3,ca1,ca2,ca3,ca4,rp,ur,la1,la2,la3])
 db.session.commit()
 db.session.close()

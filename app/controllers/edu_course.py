@@ -41,17 +41,19 @@ def get_class(class_name):
     return getattr(sys.modules[__name__], class_name)
 def cre_courses():
     item_1_id = request.args.get('item_1_id')
+    id = request.args.get('id')
     name = request.args.get('name')
     duration = request.args.get('duration')
     dept = request.args.get('dept')
     unit = request.args.get('unit')
     desc = request.args.get('desc')
     course = Course(
+        _id = id,
         item_1_id = item_1_id,
         name = name,
         duration = duration,
-        dept = dept,
-        unit = unit,
+        did = dept,
+        uid = unit,
         desc = desc,
     )
     db.session.add(course)
@@ -69,7 +71,7 @@ def get_courses():
     # result = db.session.query(Course, Course_Assignment).join(Course_Assignment, full=True).filter(Course._id == Course_Assignment.cid).all()
     # json_object = json.dumps(result, cls=AlchemyEncoder, ensure_ascii=False).encode('utf8')
     # return json_object
-    result = db.session.query(Course, func.count(Course_Assignment.eid).label('enrollment_count')) \
+    result = db.session.query(Course, func.count(Course_Assignment.emp_code).label('enrollment_count')) \
         .outerjoin(Course_Assignment, Course._id == Course_Assignment.cid) \
         .options(joinedload(Course.course_ca)).group_by(Course._id) \
         .all()
@@ -86,10 +88,10 @@ def get_courses():
             'description': row.Course.desc,
             'enrollment_count': row.enrollment_count,
             'engaged_emp_num': row.Course.engaged_emp_num,
-            'course_start_date': row.Course.course_start_date.strftime("%Y-%m-%d"),
-            'course_end_date': row.Course.course_end_date.strftime("%Y-%m-%d"),
-            'course_start_time': row.Course.course_start_time.strftime("%H:%M:%S"),
-            'course_end_time': row.Course.course_end_time.strftime("%H:%M:%S")
+            # 'course_start_date': row.Course.course_start_date.strftime("%Y-%m-%d"),
+            # 'course_end_date': row.Course.course_end_date.strftime("%Y-%m-%d"),
+            # 'course_start_time': row.Course.course_start_time.strftime("%H:%M:%S"),
+            # 'course_end_time': row.Course.course_end_time.strftime("%H:%M:%S")
         }
 
         # Include the enrollment details if available
@@ -104,8 +106,8 @@ def get_courses():
 
     return r
 def del_courses():
-    numbers = request.args.getlist('nums[]')
-    sql = delete(Course).where(Course._id.in_(numbers))
+    id = request.args.get('id')
+    sql = delete(Course).where(Course._id == id)
     db.session.execute(sql)
     try:
         db.session.commit()
@@ -119,18 +121,18 @@ def del_courses():
         db.session.commit()
 def upd_course():
     id = request.args.get('id')
-    iid = request.args.get('iid')
+    item_1_id = request.args.get('item_1_id')
     name = request.args.get('name')
     duration = request.args.get('duration')
-    did = request.args.get('did')
-    uid = request.args.get('uid')
+    dept = request.args.get('dept')
+    unit = request.args.get('unit')
     desc = request.args.get('desc')
     course = Course.query.get(id)
     course.name = name
     course.duration = duration
-    course.item_1_id = iid
-    course.did = did
-    course.uid = uid
+    course.item_1_id = item_1_id
+    course.did = dept
+    course.uid = unit
     course.desc = desc
     try:
         db.session.commit()
@@ -146,7 +148,7 @@ def upd_course():
 
 def add_course():
     id = request.args.get('id') 
-    emp_id = request.args.get('emp_id')
+    emp_code = request.args.get('emp_code')
     engaged_emp_num = request.args.get('engaged_emp_num')
     course_start_date = request.args.get('course_start_date')
     course_end_date = request.args.get('course_end_date')
@@ -160,7 +162,7 @@ def add_course():
     course.course_start_time = course_start_time
     course.course_end_time = course_end_time
     assign = Lecturer_Assignment(
-        emp_id = emp_id,
+        emp_code = emp_code,
         course_id = id,
         rating = rating
     )
@@ -196,11 +198,11 @@ def get_item_1():
         r[row._id] = row.name
     return r
 def add_member():
-    eid = request.args.get('eid')
-    cid = request.args.get('cid')
+    emp_code = request.args.get('emp_code')
+    id = request.args.get('id')
     ca = Course_Assignment(
-        eid = eid,
-        cid = cid,
+        emp_code = emp_code,
+        cid = id,
     )
     db.session.add(ca)
     try:
@@ -214,9 +216,9 @@ def add_member():
     else:
         db.session.commit()
 def remove_member():
-    eid = request.args.get('eid')
-    cid = request.args.get('cid')
-    sql = delete(Course_Assignment).where(Course_Assignment.eid == eid).where(Course_Assignment.cid == cid)
+    emp_code = request.args.get('emp_code')
+    id = request.args.get('id')
+    sql = delete(Course_Assignment).where(Course_Assignment.emp_code == emp_code).where(Course_Assignment.cid == id)
     db.session.execute(sql)
     try:
         db.session.commit()
